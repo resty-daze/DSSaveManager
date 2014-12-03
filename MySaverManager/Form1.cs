@@ -14,6 +14,9 @@ namespace MySaverManager
     public partial class Form1 : Form
     {
         private string categoryName = "None";
+        private string ds1saveFileName = "DRAKS0005.sl2";
+        private string ds2saveFileName = "DARKSII0000.sl2";
+        private string saveFileName = "";
         public Form1()
         {
             InitializeComponent();
@@ -45,6 +48,32 @@ namespace MySaverManager
         private void btnUpdate_Click(object sender, EventArgs e)
         {
             string dsSavePath = txtSavePath.Text;
+            string filePath = dsSavePath + "\\" + ds1saveFileName;
+            if (File.Exists(filePath))
+            {
+                // Dark Souls 1 Save
+                saveFileName = ds1saveFileName;
+            }
+            else 
+            {
+                filePath = dsSavePath + "\\" + ds2saveFileName;
+                if (File.Exists(filePath))
+                {
+                    // Dark Souls 2 Save
+                    saveFileName = ds2saveFileName;
+                }
+                else
+                {
+                    MessageBox.Show("Given path do not contain dark souls save file");
+                    listCategory.Clear();
+                    treeSaves.Nodes.Clear();
+                    // Not save a incorrect path
+                    Properties.Settings.Default.SaveFilePath = "";
+                    Properties.Settings.Default.Save();
+                    return;
+                }
+            }
+
             string[] subDirs = Directory.GetDirectories(dsSavePath);
             listCategory.Clear();
             foreach (var dir in subDirs)
@@ -115,7 +144,7 @@ namespace MySaverManager
         private void btnImport_Click(object sender, EventArgs e)
         {
             // 1. Check save file exist
-            var savefile = txtSavePath.Text + "\\draks0005.sl2";
+            var savefile = txtSavePath.Text + "\\" + saveFileName;
             if (!File.Exists(savefile))
             {
                 MessageBox.Show("File: " + savefile + " not exist, import failed.");
@@ -134,7 +163,7 @@ namespace MySaverManager
             }
 
             // 3. Do the Copy
-            var targetFile = dir + "\\draks0005.sl2." + DateTime.Now.ToString("yyyyMd.h.mm.ss");
+            var targetFile = dir + "\\" + saveFileName + "." + DateTime.Now.ToString("yyyyMd.h.mm.ss");
             File.Copy(savefile, targetFile);
             btnUpdate_Click(sender, e);
         }
@@ -291,7 +320,7 @@ namespace MySaverManager
             var bakupFilePath = GetFullTreePath(treeSaves.SelectedNode);
             if (File.Exists(bakupFilePath))
             {
-                var targetFilePath = txtSavePath.Text + "\\draks0005.sl2";
+                var targetFilePath = txtSavePath.Text + "\\" + saveFileName;
                 if (File.Exists(targetFilePath))
                 {
                     try {
@@ -310,7 +339,7 @@ namespace MySaverManager
 
         private void btnReadonly_Click(object sender, EventArgs e)
         {
-            var path = txtSavePath.Text + "\\" + "draks0005.sl2";
+            var path = txtSavePath.Text + "\\" + saveFileName;
             var attr = File.GetAttributes(path) ^ FileAttributes.ReadOnly;
             File.SetAttributes(path, attr);
             UpdateAttrLabel();
@@ -318,7 +347,7 @@ namespace MySaverManager
 
         private void UpdateAttrLabel()
         {
-            var path = txtSavePath.Text + "\\" + "draks0005.sl2";
+            var path = txtSavePath.Text + "\\" + saveFileName;
             bool isReadOnly = (File.GetAttributes(path) & FileAttributes.ReadOnly) == FileAttributes.ReadOnly;
             labelStatus.Text = "Current Savefile Status:" + (isReadOnly ? " " : " not ") + "read only.";
         }

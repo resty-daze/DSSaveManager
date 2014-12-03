@@ -6,7 +6,7 @@ I wrote it to add some function I want.
 
 First day to use C#, all codes in one class but works fine. Please don't try it under any possible edge case.
 
-Not support Dark Souls II now.
+Both Dark Soul I & II supported now.
 
 ---------------------------
 

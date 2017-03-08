@@ -14,8 +14,8 @@ namespace MySaverManager
     public partial class Form1 : Form
     {
         private string categoryName = "None";
-        private string ds1saveFileName = "DRAKS0005.sl2";
-        private string ds2saveFileName = "DARKSII0000.sl2";
+
+        private string[] saveFileLists = { "DRAKS0005.sl2", "DARKSII0000.sl2", "user1.dat" };
         private string saveFileName = "";
         public Form1()
         {
@@ -48,30 +48,28 @@ namespace MySaverManager
         private void btnUpdate_Click(object sender, EventArgs e)
         {
             string dsSavePath = txtSavePath.Text;
-            string filePath = dsSavePath + "\\" + ds1saveFileName;
-            if (File.Exists(filePath))
+
+            bool found = false;
+            foreach (var sfName in saveFileLists)
             {
-                // Dark Souls 1 Save
-                saveFileName = ds1saveFileName;
-            }
-            else 
-            {
-                filePath = dsSavePath + "\\" + ds2saveFileName;
+                var filePath = dsSavePath + '\\' + sfName;
                 if (File.Exists(filePath))
                 {
-                    // Dark Souls 2 Save
-                    saveFileName = ds2saveFileName;
+                    saveFileName = sfName;
+                    found = true;
+                    break;
                 }
-                else
-                {
-                    MessageBox.Show("Given path do not contain dark souls save file");
-                    listCategory.Clear();
-                    treeSaves.Nodes.Clear();
-                    // Not save a incorrect path
-                    Properties.Settings.Default.SaveFilePath = "";
-                    Properties.Settings.Default.Save();
-                    return;
-                }
+            }
+
+            if (!found)
+            {
+                MessageBox.Show("Given path do not contain dark souls save file");
+                listCategory.Clear();
+                treeSaves.Nodes.Clear();
+                // Not save a incorrect path
+                Properties.Settings.Default.SaveFilePath = "";
+                Properties.Settings.Default.Save();
+                return;
             }
 
             string[] subDirs = Directory.GetDirectories(dsSavePath);
@@ -205,7 +203,7 @@ namespace MySaverManager
             }
         }
 
-      
+
         private void renameToolStripMenuItem_Click(object sender, EventArgs e)
         {
             string newName = "";
@@ -214,17 +212,18 @@ namespace MySaverManager
             if (result == DialogResult.OK)
             {
                 var path = GetFullTreePath(treeSaves.SelectedNode);
-                try { 
-                    if (File.Exists(path)) 
+                try
+                {
+                    if (File.Exists(path))
                     {
                         File.Move(path, Path.GetDirectoryName(path) + "\\" + newName);
                     }
-                    else 
+                    else
                     {
                         Directory.Move(path, Path.GetDirectoryName(path) + "\\" + newName);
                     }
                 }
-                catch 
+                catch
                 {
                 }
                 btnUpdate_Click(sender, e);
@@ -235,9 +234,10 @@ namespace MySaverManager
         private void removeToolStripMenuItem_Click(object sender, EventArgs e)
         {
             var path = GetFullTreePath(treeSaves.SelectedNode);
-            if (File.Exists(path)) {
+            if (File.Exists(path))
+            {
                 var filename = Path.GetFileName(path);
-                DialogResult result = MessageBox.Show(this, "Are you sure to delete: " + filename, "Delete a Savefile",MessageBoxButtons.YesNo);
+                DialogResult result = MessageBox.Show(this, "Are you sure to delete: " + filename, "Delete a Savefile", MessageBoxButtons.YesNo);
                 if (result == DialogResult.Yes)
                 {
                     RemoveReadonly(path);
@@ -309,7 +309,7 @@ namespace MySaverManager
 
         private void listCategory_MouseDown(object sender, MouseEventArgs e)
         {
-            if (e.Button == MouseButtons.Right) 
+            if (e.Button == MouseButtons.Right)
             {
                 categoryPopupMenu.Show(listCategory, e.Location.X, e.Location.Y);
             }
@@ -323,11 +323,12 @@ namespace MySaverManager
                 var targetFilePath = txtSavePath.Text + "\\" + saveFileName;
                 if (File.Exists(targetFilePath))
                 {
-                    try {
+                    try
+                    {
                         RemoveReadonly(targetFilePath + ".bak");
                         File.Delete(targetFilePath + ".bak");
-                    } 
-                    catch 
+                    }
+                    catch
                     {
                     }
                     File.Move(targetFilePath, targetFilePath + ".bak");
@@ -349,7 +350,7 @@ namespace MySaverManager
         {
             var path = txtSavePath.Text + "\\" + saveFileName;
             bool isReadOnly = (File.GetAttributes(path) & FileAttributes.ReadOnly) == FileAttributes.ReadOnly;
-            labelStatus.Text = "Current Savefile Status:" + (isReadOnly ? " " : " not ") + "read only.";
+            labelStatus.Text = "Current Savefile [" + saveFileName + "] Status:" + (isReadOnly ? " " : " not ") + "read only.";
         }
 
         private void RemoveReadonly(string fileName)
